@@ -1,4 +1,6 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field
 import sys
 from typing import List
@@ -38,6 +40,11 @@ class EstudianteDB(Base):
     edad = Column(Integer, nullable=False)
 
 app = FastAPI(title="CRUD API", version="1.0.0")
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logger.warning(f"Validación fallida en {request.method} {request.url.path}: {exc.errors()}")
+    return await request_validation_exception_handler(request, exc)
 
 class EstudianteCreate(BaseModel):
     nombre: str = Field(..., min_length=3, description="Nombre de usuario (mínimo 3 caracteres)")
