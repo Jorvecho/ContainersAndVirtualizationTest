@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
+import sys
 from typing import List
 import logging
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Integer, String, create_engine
+from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import declarative_base, sessionmaker
 import os
@@ -14,9 +15,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.environ.get('DATABASE_URL', "sqlite:///./tasks.db")
+def get_env_variable(var_name):
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        logging.error(f"La variable de entorno '{var_name}' no está definida.")
+        sys.exit(1)
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+
+DATABASE_URL = get_env_variable('DATABASE_URL')
+
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 Base = declarative_base()
 
